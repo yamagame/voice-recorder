@@ -19,7 +19,7 @@ export function VAD(options) {
   }
 
   // User options
-  for (var option in options) {
+  for (let option in options) {
     if (options.hasOwnProperty(option)) {
       this.options[option] = options[option]
     }
@@ -37,7 +37,7 @@ export function VAD(options) {
   this.iterationFrequency = this.options.context.sampleRate / this.options.bufferLen
   this.iterationPeriod = 1 / this.iterationFrequency
 
-  var DEBUG = true
+  const DEBUG = true
   if (DEBUG)
     console.log(
       'Vad' +
@@ -53,9 +53,9 @@ export function VAD(options) {
 
   this.setFilter = function (shape) {
     this.filter = []
-    for (var i = 0, iLen = this.options.fftSize / 2; i < iLen; i++) {
+    for (let i = 0, iLen = this.options.fftSize / 2; i < iLen; i++) {
       this.filter[i] = 0
-      for (var j = 0, jLen = shape.length; j < jLen; j++) {
+      for (let j = 0, jLen = shape.length; j < jLen; j++) {
         if (i * this.hertzPerBin < shape[j].f) {
           this.filter[i] = shape[j].v
           break // Exit j loop
@@ -144,8 +144,8 @@ export function VAD(options) {
 
   this.update = function () {
     // Update the local version of the Linear FFT
-    var fft = this.floatFrequencyData
-    for (var i = 0, iLen = fft.length; i < iLen; i++) {
+    const fft = this.floatFrequencyData
+    for (let i = 0, iLen = fft.length; i < iLen; i++) {
       this.floatFrequencyDataLinear[i] = Math.pow(10, fft[i] / 10)
     }
     this.ready = {}
@@ -156,10 +156,10 @@ export function VAD(options) {
       return this.energy
     }
 
-    var energy = 0
-    var fft = this.floatFrequencyDataLinear
+    let energy = 0
+    const fft = this.floatFrequencyDataLinear
 
-    for (var i = 0, iLen = fft.length; i < iLen; i++) {
+    for (let i = 0, iLen = fft.length; i < iLen; i++) {
       energy += this.filter[i] * fft[i] * fft[i]
     }
 
