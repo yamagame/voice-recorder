@@ -162,7 +162,7 @@ export class VoiceRecoreder {
           const resp = JSON.parse(xhr.response)
           if (resp.text) {
             // console.log(resp.text)
-            // this.speech(resp.text)
+            this.speech(resp.text)
             this.callback(resp.text)
           }
         }

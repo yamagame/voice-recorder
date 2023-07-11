@@ -2,12 +2,17 @@
 import { RouterView } from 'vue-router'
 import { StartVoiceRecorder } from "./app/voice"
 import { ref, onMounted } from 'vue'
-const message = ref(``);
+import { Message } from "./model/message"
+const startButton = ref<string>("start")
+const messageList = ref<Message[]>([]);
 async function onClick() {
-  await StartVoiceRecorder('http://0.0.0.0:9002/transcribe', (text: string) => {
-    console.log(text)
-    message.value = text
-  })
+  if (startButton.value === "start") {
+    await StartVoiceRecorder('http://0.0.0.0:9002/transcribe', (text: string) => {
+      console.log(text)
+      messageList.value.unshift({ date: new Date(), text })
+    })
+    startButton.value = "recording..."
+  }
 }
 onMounted(async () => {
   //
@@ -15,13 +20,14 @@ onMounted(async () => {
 </script>
 
 <template>
-  <header>
-    <div class="wrapper">
-      <button @click="onClick">start</button>
-      {{ message }}
+  <div class="mark-top-header" @click.stop>
+    <div class="mark-container" @click.stop>
+      <button @click="onClick">{{ startButton }}</button>
     </div>
-  </header>
-  <RouterView />
+  </div>
+  <div class="mark-body-container">
+    <RouterView :messageList="messageList" />
+  </div>
 </template>
 
 <style scoped></style>

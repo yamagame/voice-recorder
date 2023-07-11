@@ -1,32 +1,179 @@
-/* color palette from <https://github.com/vuejs/theme> */
 :root {
-}
-
-/* semantic color variables for this project */
-:root {
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-background: var(--vt-c-black);
-    --color-background-soft: var(--vt-c-black-soft);
-    --color-background-mute: var(--vt-c-black-mute);
-
-    --color-border: var(--vt-c-divider-dark-2);
-    --color-border-hover: var(--vt-c-divider-dark-1);
-
-    --color-heading: var(--vt-c-text-dark-1);
-    --color-text: var(--vt-c-text-dark-2);
-  }
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  font-weight: normal;
+  --mark-line-padding: 2px;
+  --mark-delete-color: white;
+  --mark-delete-bg-color: #F66;
+  --mark-insert-color: white;
+  --mark-insert-bg-color: #66F;
 }
 
 body {
+  margin: 0;
+}
+
+pre {
+  margin: 0;
+  padding: 0;
+}
+
+.mark-top-header {
+  /* height: 22px; */
+  top: 0;
+  padding: 4px 10px 6px 10px;
+  font-size: 0.7em;
+  position: sticky;
+  background-color: white;
+  border-bottom: solid 1px lightgray;
+}
+
+.mark-container {
+  width: 100%;
+  /* display: flex; */
+}
+
+.mark-cell {
+  /* flex: 1; */
+  display: inline-block;
+  vertical-align: middle;
+  padding-right: 10px;
+}
+
+.mark-cell-2 {
+  /* flex: 2; */
+  display: inline-block;
+  vertical-align: middle;
+  padding-right: 10px;
+}
+
+.mark-cell-small {
+  max-width: 100px;
+}
+
+.mark-input {
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.mark-button {
+  margin-right: 10px;
+}
+
+.mark-body-container {
+  margin: 10px;
+  font-size: 0.8em;
+}
+
+.mark-card {
+  display: inline-block;
+  margin:  5px 5px 5px 5px;
+  padding: 5px 24px 5px 10px;
+  min-width: 24px;
+  min-height: 18px;
+  font-weight: bold;
+  border: solid 2px lightgray;
+  vertical-align: middle;
+}
+
+.mark-color {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  margin-right: 10px;
+  background-color: pink;
+}
+
+.mark-color-picker {
+  position: relative;
+  left: -8px;
+  top: 8px;
+  z-index: 2;
+}
+
+.mark-item {
+  display: inline-block;
+  margin-right: 10px;
+  height: 22px;
+}
+
+div.mark-top-header input[type=text] {
+  font-size: 1.2em;
+  border: #555 solid 1px;
+  height: 22px;
+}
+
+div.mark-top-header input[type=checkbox] {
+  appearance: none;
+  background-color: white;
+  display: inline-block;
+  border: 1px solid #555;
+  border-radius: 3px;
+  height: 16px;
+  width: 16px;
+}
+
+div.mark-top-header input[type="checkbox"]:checked {
+  background-color: #4489F7;
+}
+
+div.mark-top-header input[type="checkbox"]:checked::after {
+  content: '✔';
+  font-size: 20px;
+  position: relative;
+  top: -6px;
+  left: 2px;
+  color: white;
+  font-family: "Courier";
+}
+
+div.mark-top-header label {
+  display: inline-block;
+}
+
+div.mark-top-header button {
+  font-size: 1.2em;
+  direction: none;
+  border: #555 solid 1px;
+  height: 22px;
+  min-width: 48px;
+  background-color: white;
+  border-radius: 3px;
+  user-select: none;
+}
+
+div.mark-top-header button:hover {
+  background-color: #EEE;
+}
+
+div.mark-top-header button:active {
+  background-color: #888;
+}
+
+.csv-textarea {
+  /* width: 50%; */
+  height: 20px;
+}
+
+.tbl-bdr table,.tbl-bdr td,.tbl-bdr th {
+  font-size: 1em;
+  padding: 2px;
+  border-collapse: collapse;
+  border:1px solid #333;
+}
+
+.copycontainer {
+  margin-top: 2px;
+  padding: 2px;
+  display: inline-block;
+  text-decoration: underline;
+  color: blue;
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
+}
+
+:active.copycontainer {
+  color: hotpink;
 }
