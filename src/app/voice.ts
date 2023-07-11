@@ -4,9 +4,13 @@ import { encodeAudio } from './audio'
 let recorder: VoiceRecoreder
 
 // 音声処理初期設定関数（下記getUserMediaのコールバックとして、マイクとの接続開始時に実行）
-export async function StartVoiceRecorder(transcribeEndpoint: string) {
+export async function StartVoiceRecorder(
+  transcribeEndpoint: string,
+  callback: (val: string) => void
+) {
   if (recorder) return
   recorder = new VoiceRecoreder(transcribeEndpoint)
+  recorder.callback = callback
   recorder.startVad()
   recorder.start()
 }
@@ -23,6 +27,7 @@ export class VoiceRecoreder {
   counter: number
   vad: any
   transcribeEndpoint: string
+  callback: (val: string) => void
 
   constructor(transcribeEndpoint: string) {
     this.buffer = null
@@ -31,6 +36,7 @@ export class VoiceRecoreder {
     this.listening = true
     this.counter = 0
     this.transcribeEndpoint = transcribeEndpoint
+    this.callback = () => {}
   }
 
   async startVad() {
@@ -155,8 +161,9 @@ export class VoiceRecoreder {
         if (xhr.status == 200) {
           const resp = JSON.parse(xhr.response)
           if (resp.text) {
-            console.log(resp.text)
-            this.speech(resp.text)
+            // console.log(resp.text)
+            // this.speech(resp.text)
+            this.callback(resp.text)
           }
         }
       }
