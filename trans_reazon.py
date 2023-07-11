@@ -1,3 +1,4 @@
+import sys
 import reazonspeech as rs
 from espnet2.bin.asr_inference import Speech2Text
 
@@ -8,5 +9,5 @@ model = Speech2Text.from_pretrained(
         beam_size=20,
         device="cpu")
 
-for caption in rs.transcribe("./work/audio-20230710-090529.wav", model):
+for caption in rs.transcribe(sys.argv[1], model):
     print(caption)
