@@ -8,8 +8,10 @@ const messageList = ref<Message[]>([]);
 async function onClick() {
   if (startButton.value === "start") {
     await StartVoiceRecorder('http://0.0.0.0:9002/transcribe', (text: string) => {
-      console.log(text)
-      messageList.value.unshift({ date: new Date(), text })
+      // 音声認識テキスト受信
+      const idx = messageList.value.length
+      // リストに追加
+      messageList.value.unshift(new Message({ id: idx, date: new Date(), text }))
     })
     startButton.value = "recording..."
   }

@@ -1,12 +1,12 @@
-import { VAD } from './vad'
-import { encodeAudio } from './audio'
+import { VAD, VADProps } from './vad'
+import { sampleToWavAudio, audioSettings } from './audio'
 
 let recorder: VoiceRecoreder
 
 // 音声処理初期設定関数（下記getUserMediaのコールバックとして、マイクとの接続開始時に実行）
 export async function StartVoiceRecorder(
   transcribeEndpoint: string,
-  callback: (val: string) => void
+  callback: (val: string) => void,
 ) {
   if (recorder) return
   recorder = new VoiceRecoreder(transcribeEndpoint)
@@ -16,26 +16,24 @@ export async function StartVoiceRecorder(
 }
 
 export class VoiceRecoreder {
-  buffer: any
-  mediaRecorder: any
-  stream: any
+  buffer: Float32Array[]
   recording: boolean
-  audioRecorder: any
-  audioContext: any
-  settings: any
+  audioRecorder?: AudioWorkletNode
+  audioContext?: AudioContext
+  settings: audioSettings
   listening: boolean
   counter: number
-  vad: any
+  vad?: VAD
   transcribeEndpoint: string
   callback: (val: string) => void
 
   constructor(transcribeEndpoint: string) {
-    this.buffer = null
-    this.mediaRecorder = null
+    this.buffer = []
     this.recording = false
     this.listening = true
     this.counter = 0
     this.transcribeEndpoint = transcribeEndpoint
+    this.settings = new audioSettings({})
     this.callback = () => {}
   }
 
@@ -49,17 +47,14 @@ export class VoiceRecoreder {
     const sourceNode = context.createMediaStreamSource(stream)
 
     // VAD のオプション設定 (詳細後述)
-    const options = {
-      // 区間検出対象となるストリーム音源オブジェクトの指定
-      source: sourceNode,
-      // 音声区間検出開始時ハンドラ
-      voice_stop: () => {
-        this.stopRecording()
-      },
-      // 音声区間検出終了時ハンドラ
-      voice_start: () => {
-        this.startRecording()
-      }
+    const options = new VADProps(sourceNode)
+    // 音声区間検出開始時ハンドラ
+    options.voice_stop = () => {
+      this.stopRecording()
+    }
+    // 音声区間検出終了時ハンドラ
+    options.voice_start = () => {
+      this.startRecording()
     }
 
     // VADオブジェクト作成 (なお、本オブジェクトは以降使用する必要はない)
@@ -69,11 +64,12 @@ export class VoiceRecoreder {
   async start() {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
     const [track] = stream.getAudioTracks()
-    this.settings = track.getSettings()
+    const settings = track.getSettings()
+    this.settings = new audioSettings(settings)
 
-    // console.log(this.settings.channelCount)
-    // console.log(this.settings.sampleRate)
-    // console.log(this.settings.sampleSize)
+    console.log('channelCount', this.settings.channelCount)
+    console.log('sampleRate', this.settings.sampleRate)
+    console.log('sampleSize', this.settings.sampleSize)
 
     const audioContext = new AudioContext()
     await audioContext.audioWorklet.addModule('static/audio-recorder.js') // <3>
@@ -100,12 +96,13 @@ export class VoiceRecoreder {
     this.audioContext = audioContext
 
     const parameter = this.audioRecorder.parameters.get('isRecording')
-    parameter.setValueAtTime(1, this.audioContext.currentTime)
+    if (parameter) parameter.setValueAtTime(1, this.audioContext.currentTime)
   }
 
   stop() {
+    if (this.audioRecorder == null || this.audioContext == null) return
     const parameter = this.audioRecorder.parameters.get('isRecording')
-    parameter.setValueAtTime(0, this.audioContext.currentTime)
+    if (parameter) parameter.setValueAtTime(0, this.audioContext.currentTime)
   }
 
   startRecording() {
@@ -151,7 +148,7 @@ export class VoiceRecoreder {
   request() {
     if (this.buffer.length <= 0) return
     const formData = new FormData()
-    const blob = encodeAudio(this.buffer, this.settings)
+    const blob = sampleToWavAudio(this.buffer, this.settings)
     formData.append('audio', blob, `audio-${this.timeform(this.counter)}.wav`)
     this.counter++
     const xhr = new XMLHttpRequest()

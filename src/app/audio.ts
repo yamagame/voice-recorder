@@ -1,5 +1,16 @@
-export function encodeAudio(buffers, settings) {
-  const sampleCount = buffers.reduce((memo, buffer) => {
+export class audioSettings {
+  sampleSize: number = 0
+  sampleRate: number = 0
+  channelCount: number = 0
+  constructor(settings: MediaTrackSettings) {
+    if (settings.sampleSize) this.sampleSize = settings.sampleSize
+    if (settings.sampleRate) this.sampleRate = settings.sampleRate
+    if (settings.channelCount) this.channelCount = settings.channelCount
+  }
+}
+
+export function sampleToWavAudio(buffers: Float32Array[], settings: audioSettings) {
+  const sampleCount = buffers.reduce((memo: number, buffer: Float32Array) => {
     return memo + buffer.length
   }, 0)
 
@@ -24,13 +35,20 @@ export function encodeAudio(buffers, settings) {
   dataView.setUint8(13, 'm'.charCodeAt(0))
   dataView.setUint8(14, 't'.charCodeAt(0))
   dataView.setUint8(15, ' '.charCodeAt(0))
-  dataView.setUint32(16, 16, true) // fmtチャンクのバイト数 PCMの場合16バイト固定
-  dataView.setUint16(20, 1, true) // 音声フォーマット 1:PCM
-  dataView.setUint16(22, 1, true) // チャンネル数
-  dataView.setUint32(24, sampleRate, true) // サンプリング周波数(Hz)
-  dataView.setUint32(28, sampleRate * 4, true) // 1 秒あたりバイト数の平均
-  dataView.setUint16(32, bytesPerSample, true) // ブロックサイズ
-  dataView.setUint16(34, bitsPerByte * bytesPerSample, true) // ビット／サンプル
+  // fmtチャンクのバイト数: PCMの場合は16バイト固定
+  dataView.setUint32(16, 16, true)
+  // 音声フォーマット: 1:PCM
+  dataView.setUint16(20, 1, true)
+  // チャンネル数: 1チャンネル
+  dataView.setUint16(22, 1, true)
+  // サンプリング周波数(Hz): 48000
+  dataView.setUint32(24, sampleRate, true)
+  // 1秒あたりバイト数の平均: 48000 * 2
+  dataView.setUint32(28, sampleRate * bytesPerSample, true)
+  // ブロックサイズ: 2バイト
+  dataView.setUint16(32, bytesPerSample, true)
+  // サンプルビット: 16ビット
+  dataView.setUint16(34, bitsPerByte * bytesPerSample, true)
   dataView.setUint8(36, 'd'.charCodeAt(0))
   dataView.setUint8(37, 'a'.charCodeAt(0))
   dataView.setUint8(38, 't'.charCodeAt(0))
