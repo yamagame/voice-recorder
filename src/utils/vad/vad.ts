@@ -44,7 +44,7 @@ class VADOptions {
 
 export class VAD {
   options: VADOptions
-  context: any
+  context: BaseAudioContext
   filter: number[]
   hertzPerBin: number
   iterationFrequency: number
@@ -66,6 +66,7 @@ export class VAD {
   log_i: number
   log_limit: number
   energy: number = 0
+  intervalTimer: number = 0
 
   constructor(options: VADProps) {
     // Default options
@@ -156,7 +157,7 @@ export class VAD {
     this.options.source.connect(this.analyser)
 
     const self = this
-    setInterval(() => {
+    this.intervalTimer = window.setInterval(() => {
       self.analyser.getFloatFrequencyData(self.floatFrequencyData)
       self.update()
       self.monitor()
@@ -166,6 +167,13 @@ export class VAD {
     this.logging = false
     this.log_i = 0
     this.log_limit = 100
+  }
+
+  close() {
+    if (this.intervalTimer) {
+      clearInterval(this.intervalTimer)
+    }
+    this.intervalTimer = 0
   }
 
   triggerLog(limit: number) {
