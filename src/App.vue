@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
-import { VoiceRecorder } from "./utils/voice/recorder"
+import { VoiceRecorder } from "./audio/voice/recorder"
 import { ref, onMounted } from 'vue'
 import { Message } from "./model/message"
 const startButton = ref<string>("start")
@@ -23,10 +23,12 @@ async function onClick() {
         recorderStateText.value = ""
       })
       recorder.on("recognize", (res: { text: string }) => {
-        // 音声認識テキスト受信
-        const idx = messageList.value.length
-        // リストに追加
-        messageList.value.unshift(new Message({ id: idx, date: new Date(), text: res.text }))
+        // 音声認識テキスト受信、リストに追加
+        messageList.value.unshift(new Message({
+          id: messageList.value.length,
+          date: new Date(),
+          text: res.text,
+        }))
         // 発話
         recorder.speech(res.text)
       })
