@@ -1,40 +1,56 @@
-import { VAD, VADProps } from './vad'
-import { sampleToWavAudio, audioSettings } from './audio'
+import { VAD, VADProps } from '../vad/vad'
+import { sampleToWavAudio, audioSettings } from '../wav/genwav'
 
-let recorder: VoiceRecoreder
+let recorder: Recoreder
 
 // 音声処理初期設定関数（下記getUserMediaのコールバックとして、マイクとの接続開始時に実行）
-export async function StartVoiceRecorder(
-  transcribeEndpoint: string,
-  callback: (val: string) => void,
-) {
-  if (recorder) return
-  recorder = new VoiceRecoreder(transcribeEndpoint)
-  recorder.callback = callback
-  recorder.startVad()
-  recorder.start()
+export function VoiceRecorder() {
+  if (recorder) return recorder
+  recorder = new Recoreder()
+  return recorder
 }
 
-export class VoiceRecoreder {
+class EventEmitter {
+  events: { [index: string]: { call: (event: any) => void }[] } = {}
+  constructor() {}
+  emit(name: string, event: any) {
+    if (this.events[name]) {
+      this.events[name].forEach((v) => {
+        if (v.call) v.call(event)
+      })
+    }
+  }
+  removeAll(name: string) {
+    this.events[name] = []
+  }
+  on(name: string, call: (event: any) => void) {
+    this.events[name] = [{ call }]
+  }
+}
+
+class Recoreder extends EventEmitter {
   buffer: Float32Array[]
   recording: boolean
   audioRecorder?: AudioWorkletNode
   audioContext?: AudioContext
   settings: audioSettings
-  listening: boolean
+  speaking: boolean // 発話中フラッグ
   counter: number
   vad?: VAD
-  transcribeEndpoint: string
-  callback: (val: string) => void
+  transcribeEndpoint: string // 認識エンジンのエンドポイント
 
-  constructor(transcribeEndpoint: string) {
+  constructor() {
+    super()
     this.buffer = []
     this.recording = false
-    this.listening = true
+    this.speaking = false
     this.counter = 0
-    this.transcribeEndpoint = transcribeEndpoint
+    this.transcribeEndpoint = ''
     this.settings = new audioSettings({})
-    this.callback = () => {}
+  }
+
+  setEndpoint(endpoint: string) {
+    this.transcribeEndpoint = endpoint
   }
 
   async startVad() {
@@ -50,18 +66,22 @@ export class VoiceRecoreder {
     const options = new VADProps(sourceNode)
     // 音声区間検出開始時ハンドラ
     options.voice_stop = () => {
-      this.stopRecording()
+      this.stopVoiceRecording()
+      this.emit('stop', {})
     }
     // 音声区間検出終了時ハンドラ
     options.voice_start = () => {
-      this.startRecording()
+      this.startVoiceRecording()
+      this.emit('start', {})
     }
 
     // VADオブジェクト作成 (なお、本オブジェクトは以降使用する必要はない)
     this.vad = new VAD(options)
   }
 
-  async start() {
+  async init() {
+    this.startVad()
+
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
     const [track] = stream.getAudioTracks()
     const settings = track.getSettings()
@@ -95,25 +115,34 @@ export class VoiceRecoreder {
     this.audioRecorder = audioRecorder
     this.audioContext = audioContext
 
-    const parameter = this.audioRecorder.parameters.get('isRecording')
-    if (parameter) parameter.setValueAtTime(1, this.audioContext.currentTime)
-  }
-
-  stop() {
-    if (this.audioRecorder == null || this.audioContext == null) return
-    const parameter = this.audioRecorder.parameters.get('isRecording')
-    if (parameter) parameter.setValueAtTime(0, this.audioContext.currentTime)
+    console.log('initialized')
   }
 
   startRecording() {
-    if (this.listening) {
+    console.log('startRecording')
+    if (this.audioRecorder == null || this.audioContext == null) return
+    const parameter = this.audioRecorder.parameters.get('isRecording')
+    if (parameter) parameter.setValueAtTime(1, this.audioContext.currentTime)
+    console.log('startRecording')
+  }
+
+  stopRecording() {
+    if (this.audioRecorder == null || this.audioContext == null) return
+    const parameter = this.audioRecorder.parameters.get('isRecording')
+    if (parameter) parameter.setValueAtTime(0, this.audioContext.currentTime)
+    this.buffer = []
+    console.log('stopRecording')
+  }
+
+  startVoiceRecording() {
+    if (!this.speaking) {
       console.log('voice_start')
       this.recording = true
     }
   }
 
-  stopRecording() {
-    if (this.listening && this.recording) {
+  stopVoiceRecording() {
+    if (!this.speaking && this.recording) {
       console.log('voice_stop')
       this.request()
     }
@@ -134,19 +163,21 @@ export class VoiceRecoreder {
   }
 
   speech(text: string) {
-    this.listening = false
+    this.speaking = true
     this.recording = false
     const uttr = new SpeechSynthesisUtterance(text)
     uttr.onend = () => {
       this.recording = false
-      this.listening = true
+      this.speaking = false
       this.buffer = []
     }
     speechSynthesis.speak(uttr)
   }
 
   request() {
+    console.log(this.buffer.length)
     if (this.buffer.length <= 0) return
+    if (this.transcribeEndpoint === '') return
     const formData = new FormData()
     const blob = sampleToWavAudio(this.buffer, this.settings)
     formData.append('audio', blob, `audio-${this.timeform(this.counter)}.wav`)
@@ -157,11 +188,7 @@ export class VoiceRecoreder {
       if (xhr.readyState == XMLHttpRequest.DONE) {
         if (xhr.status == 200) {
           const resp = JSON.parse(xhr.response)
-          if (resp.text) {
-            // console.log(resp.text)
-            this.speech(resp.text)
-            this.callback(resp.text)
-          }
+          this.emit('recognize', resp)
         }
       }
     }

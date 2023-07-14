@@ -12,7 +12,7 @@ export class VADProps {
   }
 }
 
-export class VADOptions {
+class VADOptions {
   fftSize: number
   bufferLen: number
   voice_stop: () => void
