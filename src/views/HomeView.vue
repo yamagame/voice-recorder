@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Message } from "../model/message"
-import { getFormattedDate } from "../utils/date"
+import { getFormattedDate } from "../audio/date"
 defineProps<{
   messageList: Message[]
 }>()
@@ -13,7 +13,7 @@ defineProps<{
         <table style="width:100%">
           <thead>
             <tr :style="{ 'background-color': '#E0F0F0', 'text-align': 'left' }">
-              <th style="width:100px;">日時</th>
+              <th style="width:160px;">日時</th>
               <th>テキスト</th>
             </tr>
           </thead>
