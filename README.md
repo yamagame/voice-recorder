@@ -50,6 +50,7 @@ $ yarn install
 ## 実行方法
 
 音声データ(Wav)を受診してReazonSpeechで認識するためのサーバーを起動します。
+初回は840Mバイト程度のデータをダウンロードしますのでしばらく時間がかかります。
 
 ```sh
 $ ./script/start-server.sh
