@@ -1,8 +1,84 @@
 # voice-recorder
 
-This template should help get you started developing with Vue 3 in Vite.
+Vue3(Vite/Typescript)で作成したReazonSpeechを使用した音声認識アプリです。
+startボタンを押下すると音声認識開始します。
 
-## Recommended IDE Setup
+![demo.png](./img/demo.png)
+
+## システム構成/シーケンス図
+
+Webアプリと音声認識サーバーの２つで構成されています。
+Webアプリはフレームワークに[Vue3/Vite](https://ja.vuejs.org/)を使用しています。言語はTypescriptです。
+音声認識サーバーはPythonで作られており、認識エンジンとして[ReazonSpeech](https://research.reazon.jp/projects/ReazonSpeech/index.html)を使用しています。音声認識サーバーの認識エンジンは OpenAI の [Whisper](https://openai.com/research/whisper) に変更することもできます。
+
+```mermaid
+sequenceDiagram
+    participant front as VoiceRecorder<br/>Webアプリ<br/>(Vue3/Vite)
+    participant server as 音声認識<br/>サーバー<br/>(server.py)
+    front ->> server: WAV形式の音声データ
+    server ->> front: 音声認識結果
+```
+
+## プロジェクトのセットアップ
+
+ReazonSpeechを実行するにはPythonのバージョン要件に従う必要があります。
+開発で使用したPythonのバージョンは 3.9.13 です。
+
+```sh
+$ python --version
+Python 3.9.13
+```
+
+音声認識で使用するデータセットにアクセスするには [HuggingFace](https://huggingface.co/) のアカウント作成と [huggingface-ctl](https://huggingface.co/docs/huggingface_hub/quick-start) login で認証する必要があります。
+
+下記リンクの「ReazonSpeech HowToガイド」を参照してください。
+
+- [ReazonSpeech](https://research.reazon.jp/projects/ReazonSpeech/index.html)
+- [ReazonSpeechクイックスタート](https://research.reazon.jp/projects/ReazonSpeech/quickstart.html)
+- [ReazonSpeech HowToガイド](https://research.reazon.jp/projects/ReazonSpeech/howto.html)
+- [ReazonSpeech APIリファレンス](https://research.reazon.jp/projects/ReazonSpeech/api.html)
+
+Webアプリケーションは Vue3(Vite/Typescript)で作成しています。
+[Node.js](https://nodejs.org/ja) をインストールして以下のコマンドで必要なモジュールをダウンロードしてください。
+
+```sh
+$ npm install
+または
+$ yarn install
+```
+
+## 実行方法
+
+音声データ(Wav)を受診してReazonSpeechで認識するためのサーバーを起動します。
+
+```sh
+$ ./script/start-server.py
+```
+
+Vue3アプリを起動します。
+
+```sh
+$ npm run dev
+または
+$ yarn dev
+VITE v4.4.2  ready in 319 ms
+
+➜  Local:   http://localhost:5173/
+➜  Network: use --host to expose
+➜  press h to show help
+```
+
+表示されたURLをブラウザで開きます。
+
+## VoiceRecorderクラス
+
+VoiceRecorderクラスは音声認識を管理しています。認識するには server.py が稼働していなければいけません。
+
+VoiceRecorderクラスについてはこちらの「[README.md](./src/audio/voice/README.md)」を参照してください。
+
+## VSCodeのセットアップ
+
+VSCodeのVolarとTypeScript Vue Plugin (Volar)をインストールします。
 
 [VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
 
@@ -17,35 +93,37 @@ If the standalone TypeScript plugin doesn't feel fast enough to you, Volar has a
     2) Find `TypeScript and JavaScript Language Features`, right click and select `Disable (Workspace)`
 2. Reload the VSCode window by running `Developer: Reload Window` from the command palette.
 
-## Customize configuration
+## 設定のカスタマイズ
+
+Viteの設定については下記リンクを参照
 
 See [Vite Configuration Reference](https://vitejs.dev/config/).
 
-## Project Setup
+## プロジェクトのセットアップ
 
 ```sh
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+### ホットリロードで開発する場合
 
 ```sh
 npm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
+### アプリをビルドする場合
 
 ```sh
 npm run build
 ```
 
-### Run Unit Tests with [Vitest](https://vitest.dev/)
+### [Vitest](https://vitest.dev/) を使用して単体テストを実行
 
 ```sh
 npm run test:unit
 ```
 
-### Run End-to-End Tests with [Playwright](https://playwright.dev)
+### [Playwright](https://playwright.dev) を使用してE2Eテストを実行
 
 ```sh
 # Install browsers for the first run
@@ -64,7 +142,7 @@ npm run test:e2e -- tests/example.spec.ts
 npm run test:e2e -- --debug
 ```
 
-### Lint with [ESLint](https://eslint.org/)
+### [ESLint](https://eslint.org/) を使用して構文チェックを実行
 
 ```sh
 npm run lint
