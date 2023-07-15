@@ -52,7 +52,7 @@ $ yarn install
 音声データ(Wav)を受診してReazonSpeechで認識するためのサーバーを起動します。
 
 ```sh
-$ ./script/start-server.py
+$ ./script/start-server.sh
 ```
 
 Vue3アプリを起動します。
