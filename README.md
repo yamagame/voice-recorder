@@ -77,6 +77,44 @@ VoiceRecorderクラスは音声認識を管理しています。認識するに�
 
 VoiceRecorderクラスについてはこちらの「[README.md](./src/audio/voice/README.md)」を参照してください。
 
+## ReazonSpeechをローカル実行する方法
+
+ReazonSpeechは初回起動時に学習モデルの情報をhuggingfaceのサーバーに取りに行こうとする。
+実際にはすでにモデルデータがダウンロードされている場合はダウンロードされずキャッシュが採用されるが、初回起動のみGETリクエストが必要となり、インターネット接続が必要になる。
+
+このインターネット接続を回避して完全にローカル実行するためには、espnet_model_zoo/downloader.py の以下の関数に「local_files_only=True」の1行加える必要がある。
+
+```python
+def huggingface_download(
+    self, name: str = None, version: int = -1, quiet: bool = False, **kwargs: str
+) -> str:
+    # Get huggingface_id from table.csv
+    if name is None:
+        names = self.query(key="name", **kwargs)
+        if len(names) == 0:
+            message = "Not found models:"
+            for key, value in kwargs.items():
+                message += f" {key}={value}"
+            raise RuntimeError(message)
+        if version < 0:
+            version = len(names) + version
+        name = list(names)[version]
+
+    if "@" in name:
+        huggingface_id, revision = name.split("@", 1)
+    else:
+        huggingface_id = name
+        revision = None
+
+    return snapshot_download(
+        huggingface_id,
+        revision=revision,
+        library_name="espnet",
+        local_files_only=True,  # <=== この１行を加える
+        cache_dir=self.cachedir,
+    )
+```
+
 ## VSCodeのセットアップ
 
 VSCodeのVolarとTypeScript Vue Plugin (Volar)をインストールします。
