@@ -30,6 +30,7 @@ coverage
 test-results/
 playwright-report/
 work/*
+!work/.gitkeep
 
 __pycache__
 .mypy_cache
