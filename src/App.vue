@@ -8,7 +8,7 @@ const recorderStateText = ref<string>("")
 const messageList = ref<Message[]>([]);
 
 const recorder = VoiceRecorder()
-recorder.setEndpoint('http://0.0.0.0:9002/transcribe')
+recorder.setEndpoint('http://localhost:9002/transcribe')
 
 async function onClick() {
   if (startButton.value === "start") {

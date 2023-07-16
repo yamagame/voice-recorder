@@ -41,6 +41,7 @@ class Recoreder extends EventEmitter {
   vad?: VAD
   transcribeEndpoint: string // 認識エンジンのエンドポイント
   initialized: boolean = false
+  voice?: SpeechSynthesisVoice
 
   constructor() {
     super()
@@ -50,6 +51,7 @@ class Recoreder extends EventEmitter {
     this.counter = 0
     this.transcribeEndpoint = ''
     this.settings = new audioSettings({})
+    this.selectVoice('ja-JP')
   }
 
   setEndpoint(endpoint: string) {
@@ -63,11 +65,15 @@ class Recoreder extends EventEmitter {
     const settings = track.getSettings()
     this.settings = new audioSettings(settings)
 
+    const context = new AudioContext()
+
+    if (this.settings.channelCount === 0) this.settings.channelCount = 1
+    if (this.settings.sampleRate === 0) this.settings.sampleRate = context.sampleRate
+    if (this.settings.sampleSize === 0) this.settings.sampleSize = 16
+
     console.log('channelCount', this.settings.channelCount)
     console.log('sampleRate', this.settings.sampleRate)
     console.log('sampleSize', this.settings.sampleSize)
-
-    const context = new AudioContext()
 
     // 音声ストリーム音源オブジェクトの作成
     const sourceNode = context.createMediaStreamSource(stream)
@@ -81,8 +87,9 @@ class Recoreder extends EventEmitter {
     }
     // 音声区間検出終了時ハンドラ
     options.voice_start = () => {
-      this.startVoiceRecording()
-      this.emit('start', {})
+      if (this.startVoiceRecording()) {
+        this.emit('start', {})
+      }
     }
     this.vad = new VAD(options)
 
@@ -143,7 +150,9 @@ class Recoreder extends EventEmitter {
   startVoiceRecording() {
     if (!this.speaking) {
       this.recording = true
+      return true
     }
+    return false
   }
 
   stopVoiceRecording() {
@@ -166,10 +175,27 @@ class Recoreder extends EventEmitter {
     }-${(index % 100).toString().padStart(2, '0')}`
   }
 
+  selectVoice(lang: string) {
+    const populateVoiceList = () => {
+      if (typeof speechSynthesis === 'undefined') {
+        return
+      }
+      const voices = speechSynthesis.getVoices()
+      this.voice = voices.find((voice) => voice.lang === lang)
+    }
+    populateVoiceList()
+    if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+      speechSynthesis.onvoiceschanged = populateVoiceList
+    }
+  }
+
   speech(text: string) {
     this.speaking = true
     this.recording = false
     const uttr = new SpeechSynthesisUtterance(text)
+    if (this.voice) {
+      uttr.voice = this.voice
+    }
     uttr.onend = () => {
       this.recording = false
       this.speaking = false
