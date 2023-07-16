@@ -42,6 +42,7 @@ class Recoreder extends EventEmitter {
   transcribeEndpoint: string // 認識エンジンのエンドポイント
   initialized: boolean = false
   voice?: SpeechSynthesisVoice
+  utterances: SpeechSynthesisUtterance[] = []
 
   constructor() {
     super()
@@ -190,6 +191,9 @@ class Recoreder extends EventEmitter {
   }
 
   speech(text: string) {
+    if (typeof speechSynthesis === 'undefined') {
+      return
+    }
     this.speaking = true
     this.recording = false
     const uttr = new SpeechSynthesisUtterance(text)
@@ -200,7 +204,9 @@ class Recoreder extends EventEmitter {
       this.recording = false
       this.speaking = false
       this.buffer = []
+      this.utterances = []
     }
+    this.utterances.push(uttr)
     speechSynthesis.speak(uttr)
   }
 
