@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  reazon-dev:
+    restart: always
+    hostname: reazon-dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - HUGGINGFACE_TOKEN=$HUGGINGFACE_TOKEN
+    ports:
+      - 9002:9002
+      - 5173:5173
+    environment:
+      - HUGGINGFACE_TOKEN=$HUGGINGFACE_TOKEN
+    tty: true
+    volumes:
+      - ./:/app
+    working_dir: /app
