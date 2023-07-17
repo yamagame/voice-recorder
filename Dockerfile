@@ -12,9 +12,8 @@ RUN pip install --upgrade pip
 RUN pip install --upgrade huggingface_hub
 RUN huggingface-cli login --token ${HUGGINGFACE_TOKEN}
 RUN pip install datasets
-RUN pip install uvicorn
-RUN pip install fastapi
-RUN pip install python-multipart
+RUN pip install uvicorn fastapi python-multipart
+RUN pip install pyworld==0.3.2
 
 #RUN apt install -y nodejs npm
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
