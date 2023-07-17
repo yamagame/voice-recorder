@@ -16,7 +16,7 @@ RUN pip install uvicorn
 RUN pip install fastapi
 RUN pip install python-multipart
 
-RUN apt install -y nodejs npm
+#RUN apt install -y nodejs npm
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
 
 RUN . "$HOME/.bashrc" && \
@@ -28,4 +28,6 @@ RUN . "$HOME/.bashrc" && \
 RUN . "$HOME/.cargo/env" && \
   pip install git+https://github.com/reazon-research/ReazonSpeech
 
-RUN python trans_reazon.py ./testdata/sample.wav
+COPY ./trans_reazon.py .
+COPY ./testdata/sample.wav .
+RUN python ./trans_reazon.py ./sample.wav
