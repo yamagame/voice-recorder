@@ -115,6 +115,24 @@ def huggingface_download(
     )
 ```
 
+## docker-compose の実行
+
+```bash
+# Hugging Face のアクセストークンを環境変数に設定
+$ export HUGGINGFACE_TOKEN=XXXXXXXXXXXXXXXXX
+
+# compose up
+$ docker-compose up -d
+
+# コンテナにログインしてサーバーを起動
+$ docker-compose exec -it reazon-dev bash
+$ ./script/start-server.sh
+
+# 別のshellでコンテナにログインして yarn dev
+$ docker-compose exec -it reazon-dev bash
+$ yarn dev
+```
+
 ## VSCodeのセットアップ
 
 VSCodeのVolarとTypeScript Vue Plugin (Volar)をインストールします。
