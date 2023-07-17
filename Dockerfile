@@ -28,6 +28,6 @@ RUN . "$HOME/.bashrc" && \
 RUN . "$HOME/.cargo/env" && \
   pip install git+https://github.com/reazon-research/ReazonSpeech
 
-COPY ./trans_reazon.py .
-COPY ./testdata/sample.wav .
-RUN python ./trans_reazon.py ./sample.wav
+COPY ./trans_reazon.py /tmp
+COPY ./testdata/sample.wav /tmp
+RUN python /tmp/trans_reazon.py /tmp/sample.wav
