@@ -126,10 +126,11 @@ $ docker-compose up -d
 
 # コンテナにログインしてサーバーを起動
 $ docker-compose exec -it reazon-dev bash
-$ ./script/start-server.sh
+$ ./scripts/start-server.sh
 
 # 別のshellでコンテナにログインして yarn dev
 $ docker-compose exec -it reazon-dev bash
+$ yarn install
 $ yarn dev
 ```
 
