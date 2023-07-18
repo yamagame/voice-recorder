@@ -34,6 +34,8 @@ class Recoreder extends EventEmitter {
   buffer: Float32Array[]
   recording: boolean
   audioRecorder?: AudioWorkletNode
+  sourceNode?: MediaStreamAudioSourceNode
+  analyserNode?: AnalyserNode
   audioContext?: AudioContext
   settings: audioSettings
   speaking: boolean // 発話中フラッグ
@@ -43,6 +45,7 @@ class Recoreder extends EventEmitter {
   initialized: boolean = false
   voice?: SpeechSynthesisVoice
   utterances: SpeechSynthesisUtterance[] = []
+  intervalTimer: number = 0
 
   constructor() {
     super()
@@ -77,10 +80,10 @@ class Recoreder extends EventEmitter {
     console.log('sampleSize', this.settings.sampleSize)
 
     // 音声ストリーム音源オブジェクトの作成
-    const sourceNode = context.createMediaStreamSource(stream)
+    this.sourceNode = context.createMediaStreamSource(stream)
 
     // VAD のオプション設定 (詳細後述)
-    const options = new VADProps(sourceNode)
+    const options = new VADProps()
     // 音声区間検出開始時ハンドラ
     options.voice_stop = () => {
       this.stopVoiceRecording()
@@ -92,7 +95,6 @@ class Recoreder extends EventEmitter {
         this.emit('start', {})
       }
     }
-    this.vad = new VAD(options)
 
     // 音声データ録音ノードを作成
     await context.audioWorklet.addModule('static/audio-recorder.js')
@@ -110,8 +112,32 @@ class Recoreder extends EventEmitter {
       }
     })
 
+    // Create analyser
+    const analyserNode = context.createAnalyser()
+    analyserNode.smoothingTimeConstant = options.smoothingTimeConstant
+    analyserNode.fftSize = options.fftSize
+
+    // 音声区間検出
+    const vad = new VAD({ ...options, frequencyBinCount: analyserNode.frequencyBinCount })
+
+    if (this.intervalTimer) {
+      clearInterval(this.intervalTimer)
+    }
+    this.intervalTimer = window.setInterval(() => {
+      analyserNode.getFloatFrequencyData(vad.floatFrequencyData)
+      vad.update()
+      vad.monitor()
+    }, 10)
+
+    this.vad = vad
+    this.analyserNode = analyserNode
+
+    // souceノードにAnalyzerノードを連結
+    this.sourceNode.connect(this.analyserNode)
+
     // VADのアナライザーノードに録音ノードを連結
-    this.vad.analyser.connect(audioRecorder)
+    this.analyserNode.connect(audioRecorder)
+
     // 録音ノードを出力先に連結
     audioRecorder.connect(context.destination)
 
@@ -131,7 +157,7 @@ class Recoreder extends EventEmitter {
     this.recording = false
     this.speaking = false
     this.counter = 0
-    this.vad?.close()
+    this.close()
     delete this.vad
   }
 
@@ -154,6 +180,13 @@ class Recoreder extends EventEmitter {
       return true
     }
     return false
+  }
+
+  close() {
+    if (this.intervalTimer) {
+      clearInterval(this.intervalTimer)
+    }
+    this.intervalTimer = 0
   }
 
   stopVoiceRecording() {

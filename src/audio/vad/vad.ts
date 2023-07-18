@@ -4,12 +4,11 @@ class Filter {
 }
 
 export class VADProps {
-  source: MediaStreamAudioSourceNode
   voice_stop?: () => void
   voice_start?: () => void
-  constructor(source: MediaStreamAudioSourceNode) {
-    this.source = source
-  }
+  smoothingTimeConstant: number = 0.99
+  fftSize: number = 512
+  frequencyBinCount: number = 256
 }
 
 class VADOptions {
@@ -23,8 +22,9 @@ class VADOptions {
   energy_threshold_ratio_neg: number // Signal must be half the offset
   energy_integration: number // Size of integration change compared to the signal per second.
   filter: Filter[]
-  source: MediaStreamAudioSourceNode
-  constructor(source: MediaStreamAudioSourceNode) {
+  sampleRate: number = 48000
+  frequencyBinCount: number = 256
+  constructor() {
     this.fftSize = 512
     this.bufferLen = 512
     this.voice_stop = function () {}
@@ -38,13 +38,11 @@ class VADOptions {
       { f: 200, v: 0 }, // 0 -> 200 is 0
       { f: 2000, v: 1 }, // 200 -> 2k is 1
     ]
-    this.source = source
   }
 }
 
 export class VAD {
   options: VADOptions
-  context: BaseAudioContext
   filter: number[]
   hertzPerBin: number
   iterationFrequency: number
@@ -61,42 +59,22 @@ export class VAD {
   voiceTrendEnd: number
   floatFrequencyData: Float32Array
   floatFrequencyDataLinear: Float32Array
-  analyser: AnalyserNode
   logging: boolean
   log_i: number
   log_limit: number
   energy: number = 0
-  intervalTimer: number = 0
 
   constructor(options: VADProps) {
     // Default options
+    this.options = new VADOptions()
     this.options = {
-      fftSize: 512,
-      bufferLen: 512,
-      voice_stop: function () {},
-      voice_start: function () {},
-      smoothingTimeConstant: 0.99,
-      energy_offset: 1e-8, // The initial offset.
-      energy_threshold_ratio_pos: 2, // Signal must be twice the offset
-      energy_threshold_ratio_neg: 0.5, // Signal must be half the offset
-      energy_integration: 1, // Size of integration change compared to the signal per second.
-      filter: [
-        { f: 200, v: 0 }, // 0 -> 200 is 0
-        { f: 2000, v: 1 }, // 200 -> 2k is 1
-      ],
+      ...this.options,
       ...options,
     }
 
-    // Require source
-    if (!this.options.source)
-      throw new Error('The options must specify a MediaStreamAudioSourceNode.')
-
-    // Set this.context
-    this.context = this.options.source.context
-
     // Calculate time relationships
-    this.hertzPerBin = this.context.sampleRate / this.options.fftSize
-    this.iterationFrequency = this.context.sampleRate / this.options.bufferLen
+    this.hertzPerBin = this.options.sampleRate / this.options.fftSize
+    this.iterationFrequency = this.options.sampleRate / this.options.bufferLen
     this.iterationPeriod = 1 / this.iterationFrequency
 
     const DEBUG = true
@@ -104,7 +82,7 @@ export class VAD {
       console.log(
         'Vad' +
           ' | sampleRate: ' +
-          this.context.sampleRate +
+          this.options.sampleRate +
           ' | hertzPerBin: ' +
           this.hertzPerBin +
           ' | iterationFrequency: ' +
@@ -143,37 +121,14 @@ export class VAD {
     this.voiceTrendStart = 5
     this.voiceTrendEnd = -5
 
-    // Create analyser
-    this.analyser = this.context.createAnalyser()
-    this.analyser.smoothingTimeConstant = this.options.smoothingTimeConstant // 0.99;
-    this.analyser.fftSize = this.options.fftSize
-
-    this.floatFrequencyData = new Float32Array(this.analyser.frequencyBinCount)
-
     // Setup local storage of the Linear FFT data
+    this.floatFrequencyData = new Float32Array(this.options.frequencyBinCount)
     this.floatFrequencyDataLinear = new Float32Array(this.floatFrequencyData.length)
-
-    // Connect this.analyser
-    this.options.source.connect(this.analyser)
-
-    const self = this
-    this.intervalTimer = window.setInterval(() => {
-      self.analyser.getFloatFrequencyData(self.floatFrequencyData)
-      self.update()
-      self.monitor()
-    }, 10)
 
     // log stuff
     this.logging = false
     this.log_i = 0
     this.log_limit = 100
-  }
-
-  close() {
-    if (this.intervalTimer) {
-      clearInterval(this.intervalTimer)
-    }
-    this.intervalTimer = 0
   }
 
   triggerLog(limit: number) {
