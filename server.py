@@ -22,13 +22,37 @@ app.add_middleware(
 
 @app.post("/transcribe")
 async def transcribe(audio: UploadFile = File(...)): #recieve data
-    outputfile = os.path.join("./work", Path(audio.filename).stem + ".wav")
+    outputfile = os.path.join(os.environ.get('WAVE_FILE_DIR', "./work"), Path(audio.filename).stem + ".wav")
 
     # wavファイルを書き出し
     upload_dir = open(outputfile, "wb+")
     shutil.copyfileobj(audio.file, upload_dir)
     upload_dir.close()
     print(outputfile)
+
+    lock.acquire()
+
+    # whisperの場合
+    # text = whisperTranscribe(outputfile)
+
+    # reazonの場合
+    text = reazonTranscribe(outputfile)
+
+    lock.release()
+    return {"filename": audio.filename, "text": text}
+
+class Transcribe(BaseModel):
+    filename: str
+
+@app.post("/wav/transcribe")
+async def transcribeFromAPI(audio: Transcribe): #recieve data
+    outputfile = os.path.join(os.environ.get('WAVE_FILE_DIR', "./work"), Path(audio.filename).stem + ".wav")
+
+    # wavファイルを書き出し
+    # upload_dir = open(outputfile, "wb+")
+    # shutil.copyfileobj(audio.file, upload_dir)
+    # upload_dir.close()
+    # print(outputfile)
 
     lock.acquire()
 
