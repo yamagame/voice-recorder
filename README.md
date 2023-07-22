@@ -29,7 +29,7 @@ $ python --version
 Python 3.9.13
 ```
 
-音声認識で使用するデータセットにアクセスするには [HuggingFace](https://huggingface.co/) のアカウント作成と [huggingface-ctl](https://huggingface.co/docs/huggingface_hub/quick-start) login で認証する必要があります。
+音声認識で使用するデータセットにアクセスするには [HuggingFace](https://huggingface.co/) のアカウント作成と [huggingface-cli](https://huggingface.co/docs/huggingface_hub/quick-start) login で認証する必要があります。
 
 下記リンクの「ReazonSpeech HowToガイド」を参照してください。
 
@@ -50,9 +50,12 @@ $ yarn install
 ## 実行方法
 
 音声データ(Wav)を受診してReazonSpeechで認識するためのサーバーを起動します。
-初回は840Mバイト程度のデータをダウンロードしますのでしばらく時間がかかります。
+初回実行は840Mバイト程度のデータをダウンロードしますのでしばらく時間がかかります。
 
-```sh
+データセットを huggingface からダウンロードするにはアクセストークンが必要です。サーバーの起動の前に huggingface-cli login して実行してください。
+
+```bash
+# 音声認識サーバーの起動
 $ ./script/start-server.sh
 ```
 
@@ -116,6 +119,8 @@ def huggingface_download(
 ```
 
 ## docker-compose の実行
+
+データセットをダウンロードするには HuggingFace のアクセストークンが必要です。[HuggingFace](https://huggingface.co/) にログインして、Settings から AccessToken を選択してアクセストークンを作成します。アクセストークンの取得方法は「[User access tokens](https://huggingface.co/docs/hub/security-tokens)」を参照してください。
 
 ```bash
 # Hugging Face のアクセストークンを環境変数に設定
