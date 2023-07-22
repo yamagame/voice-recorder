@@ -1,2 +1,2 @@
 #!/bin/bash
-docker-compose rm -fsv reazon
+docker-compose rm -fsv reazon-dev
