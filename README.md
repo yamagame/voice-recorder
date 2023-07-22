@@ -132,7 +132,14 @@ $ ./scripts/start-server.sh
 $ docker-compose exec -it reazon-dev bash
 $ yarn install
 $ yarn dev
+VITE v4.4.2  ready in 319 ms
+
+➜  Local:   http://localhost:5173/
+➜  Network: use --host to expose
+➜  press h to show help
 ```
+
+表示されたURLをブラウザで開きます。
 
 ## VSCodeのセットアップ
 
