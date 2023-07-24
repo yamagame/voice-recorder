@@ -1,0 +1,10 @@
+--- ./work/downloader.py	2023-07-25 07:51:30.000000000 +0900
++++ ./work/patch/downloader.py	2023-07-25 07:43:59.000000000 +0900
+@@ -268,6 +268,7 @@ class ModelDownloader:
+             huggingface_id,
+             revision=revision,
+             library_name="espnet",
++            local_files_only=True, 
+             cache_dir=self.cachedir,
+         )
+ 

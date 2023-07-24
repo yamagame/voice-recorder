@@ -30,3 +30,8 @@ RUN . "$HOME/.cargo/env" && \
 COPY ./trans_reazon.py /tmp
 COPY ./testdata/sample.wav /tmp
 RUN python /tmp/trans_reazon.py /tmp/sample.wav
+
+RUN huggingface-cli logout
+
+COPY ./downloader.patch /tmp/downloader.patch
+RUN patch /usr/local/lib/python3.9/site-packages/espnet_model_zoo/downloader.py /tmp/downloader.patch
