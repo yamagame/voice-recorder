@@ -15,14 +15,29 @@ async function onClick() {
     if (!recorder.initialized) {
       recorder.initialized = true
       recorder.on("start", () => {
-        // 認識開始
-        recorderStateText.value = "認識中..."
-      })
-      recorder.on("stop", () => {
-        // 認識停止
+        startButton.value = "recording..."
         recorderStateText.value = ""
       })
-      recorder.on("recognize", (res: { text: string }) => {
+      recorder.on("close", () => {
+        startButton.value = "start"
+        recorderStateText.value = ""
+      })
+      recorder.on("recognize-start", () => {
+        recorderStateText.value = "認識開始"
+      })
+      recorder.on("recognize-stop", () => {
+        recorderStateText.value = "認識停止"
+      })
+      recorder.on("synthesize-start", () => {
+        recorderStateText.value = "発話中"
+      })
+      recorder.on("synthesize-end", () => {
+        recorderStateText.value = "発話終了"
+      })
+      recorder.on("transcribe-start", () => {
+        recorderStateText.value = "認識中..."
+      })
+      recorder.on("transcribe-end", (res: { text: string }) => {
         // 音声認識テキスト受信、リストに追加
         messageList.value.unshift(new Message({
           id: messageList.value.length,
@@ -31,14 +46,12 @@ async function onClick() {
         }))
         // 発話
         recorder.speech(res.text)
+        recorderStateText.value = ""
       })
     }
     await recorder.start()
-    startButton.value = "recording..."
   } else {
     await recorder.stop()
-    startButton.value = "start"
-    recorderStateText.value = ""
   }
 }
 

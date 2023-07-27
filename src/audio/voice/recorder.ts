@@ -1,6 +1,8 @@
 import { VAD, VADProps } from '../vad/vad'
 import { sampleToWavAudio, audioSettings } from '../wav/genwav'
 
+type RecorderState = 'idle' | 'recording' | 'speaking' | 'transcribing'
+
 let recorder: Recoreder
 
 // 音声処理初期設定関数（下記getUserMediaのコールバックとして、マイクとの接続開始時に実行）
@@ -32,13 +34,13 @@ class EventEmitter {
 
 class Recoreder extends EventEmitter {
   buffer: Float32Array[]
-  recording: boolean
+  // recording: boolean
   audioRecorder?: AudioWorkletNode
   sourceNode?: MediaStreamAudioSourceNode
   analyserNode?: AnalyserNode
   audioContext?: AudioContext
   settings: audioSettings
-  speaking: boolean // 発話中フラッグ
+  // speaking: boolean // 発話中フラッグ
   counter: number
   vad?: VAD
   transcribeEndpoint: string // 認識エンジンのエンドポイント
@@ -46,12 +48,14 @@ class Recoreder extends EventEmitter {
   voice?: SpeechSynthesisVoice
   utterances: SpeechSynthesisUtterance[] = []
   intervalTimer: number = 0
+  delay: number = 0
+  state: RecorderState = 'idle'
 
   constructor() {
     super()
     this.buffer = []
-    this.recording = false
-    this.speaking = false
+    // this.recording = false
+    // this.speaking = false
     this.counter = 0
     this.transcribeEndpoint = ''
     this.settings = new audioSettings({})
@@ -83,16 +87,19 @@ class Recoreder extends EventEmitter {
     this.sourceNode = context.createMediaStreamSource(stream)
 
     // VAD のオプション設定 (詳細後述)
-    const options = new VADProps()
+    const VadOptions = new VADProps()
     // 音声区間検出開始時ハンドラ
-    options.voice_stop = () => {
-      this.stopVoiceRecording()
-      this.emit('stop', {})
+    VadOptions.voice_stop = () => {
+      // if (!this.speaking && this.recording)
+      if (this.state === 'recording') {
+        this.delay = 100
+        this.emit('recognize-stop', {})
+      }
     }
     // 音声区間検出終了時ハンドラ
-    options.voice_start = () => {
+    VadOptions.voice_start = () => {
       if (this.startVoiceRecording()) {
-        this.emit('start', {})
+        this.emit('recognize-start', {})
       }
     }
 
@@ -104,21 +111,21 @@ class Recoreder extends EventEmitter {
     audioRecorder.port.addEventListener('message', (event) => {
       // 録音データを確保
       this.buffer.push(event.data.buffer)
-      if (!this.recording) {
+      if (this.state != 'recording') {
         // 音声区間検出していなければ直近のデータのみにスライス
         const bufferSize = event.data.buffer.length
-        const preRecordingSize = ((this.settings.sampleRate / bufferSize) * 2) / 5 // 0.4秒前から録音
+        const preRecordingSize = ((this.settings.sampleRate / bufferSize) * 10) / 5
         this.buffer = this.buffer.slice(-preRecordingSize)
       }
     })
 
     // Create analyser
     const analyserNode = context.createAnalyser()
-    analyserNode.smoothingTimeConstant = options.smoothingTimeConstant
-    analyserNode.fftSize = options.fftSize
+    analyserNode.smoothingTimeConstant = VadOptions.smoothingTimeConstant
+    analyserNode.fftSize = VadOptions.fftSize
 
     // 音声区間検出
-    const vad = new VAD({ ...options, frequencyBinCount: analyserNode.frequencyBinCount })
+    const vad = new VAD({ ...VadOptions, frequencyBinCount: analyserNode.frequencyBinCount })
 
     if (this.intervalTimer) {
       clearInterval(this.intervalTimer)
@@ -127,6 +134,12 @@ class Recoreder extends EventEmitter {
       analyserNode.getFloatFrequencyData(vad.floatFrequencyData)
       vad.update()
       vad.monitor()
+      if (this.delay > 0) {
+        this.delay--
+        if (this.delay == 0) {
+          this.stopVoiceRecording()
+        }
+      }
     }, 10)
 
     this.vad = vad
@@ -148,17 +161,20 @@ class Recoreder extends EventEmitter {
     audioRecorder.port.start()
 
     this.startRecording()
+
+    this.emit('start', {})
   }
 
   async stop() {
     this.stopRecording()
     this.audioContext?.close()
     this.buffer = []
-    this.recording = false
-    this.speaking = false
+    this.state = 'idle'
+    this.delay = 0
     this.counter = 0
     this.close()
     delete this.vad
+    this.emit('close', {})
   }
 
   startRecording() {
@@ -175,8 +191,8 @@ class Recoreder extends EventEmitter {
   }
 
   startVoiceRecording() {
-    if (!this.speaking) {
-      this.recording = true
+    if (this.state === 'idle') {
+      this.state = 'recording'
       return true
     }
     return false
@@ -190,10 +206,12 @@ class Recoreder extends EventEmitter {
   }
 
   stopVoiceRecording() {
-    if (!this.speaking && this.recording) {
-      this.request()
+    if (this.state != 'speaking') {
+      this.transcribe()
+      return true
     }
-    this.recording = false
+    this.state = 'idle'
+    return false
   }
 
   timeform(index: number) {
@@ -227,25 +245,28 @@ class Recoreder extends EventEmitter {
     if (typeof speechSynthesis === 'undefined') {
       return
     }
-    this.speaking = true
-    this.recording = false
+    this.state = 'speaking'
+    this.delay = 0
     const uttr = new SpeechSynthesisUtterance(text)
     if (this.voice) {
       uttr.voice = this.voice
     }
+    this.emit('synthesize-start', {})
     uttr.onend = () => {
-      this.recording = false
-      this.speaking = false
+      this.state = 'idle'
       this.buffer = []
       this.utterances = []
+      this.emit('synthesize-end', {})
     }
     this.utterances.push(uttr)
     speechSynthesis.speak(uttr)
   }
 
-  request() {
+  transcribe() {
     if (this.buffer.length <= 0) return
     if (this.transcribeEndpoint === '') return
+    this.state = 'transcribing'
+    this.emit('transcribe-start', {})
     const formData = new FormData()
     const blob = sampleToWavAudio(this.buffer, this.settings)
     formData.append('audio', blob, `audio-${this.timeform(this.counter)}.wav`)
@@ -256,7 +277,8 @@ class Recoreder extends EventEmitter {
       if (xhr.readyState == XMLHttpRequest.DONE) {
         if (xhr.status == 200) {
           const resp = JSON.parse(xhr.response)
-          this.emit('recognize', resp)
+          this.emit('transcribe-end', resp)
+          this.state = 'idle'
         }
       }
     }
