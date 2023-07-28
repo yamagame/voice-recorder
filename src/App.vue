@@ -48,10 +48,16 @@ async function onClick() {
         recorder.speech(res.text)
         recorderStateText.value = ""
       })
+      await recorder.start()
+    } else {
+      recorder.resume()
+      startButton.value = "recording..."
     }
-    await recorder.start()
   } else {
-    await recorder.stop()
+    // await recorder.stop()
+    recorder.pause()
+    startButton.value = "start"
+    recorderStateText.value = ""
   }
 }
 

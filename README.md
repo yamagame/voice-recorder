@@ -19,6 +19,10 @@ sequenceDiagram
     server ->> front: 音声認識結果
 ```
 
+## ステート図
+
+![ステート図](./img/recoding-state.drawio.svg)
+
 ## プロジェクトのセットアップ
 
 ReazonSpeechを実行するにはPythonのバージョン要件に従う必要があります。
