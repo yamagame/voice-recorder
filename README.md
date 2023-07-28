@@ -150,6 +150,13 @@ VITE v4.4.2  ready in 319 ms
 
 表示されたURLをブラウザで開きます。
 
+イメージをビルドし直す場合は以下のスクリプトを実行してください。
+
+```sh
+# 再ビルドする場合
+$ ./scripts/rebuld-up.sh
+```
+
 ## VSCodeのセットアップ
 
 VSCodeのVolarとTypeScript Vue Plugin (Volar)をインストールします。
