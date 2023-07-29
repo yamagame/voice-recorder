@@ -116,7 +116,7 @@ export class VAD {
     this.energy_threshold_neg = this.energy_offset * this.options.energy_threshold_ratio_neg
 
     this.voiceTrend = 0
-    this.voiceTrendMax = 15
+    this.voiceTrendMax = 10
     this.voiceTrendMin = -10
     this.voiceTrendStart = 5
     this.voiceTrendEnd = -5
@@ -191,6 +191,8 @@ export class VAD {
         this.voiceTrend++
       }
     }
+
+    console.log(this.voiceTrend)
 
     let start = false
     let end = false
