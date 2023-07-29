@@ -31,7 +31,7 @@ class VADOptions {
     this.voice_start = function () {}
     this.smoothingTimeConstant = 0.99
     this.energy_offset = 1e-8 // The initial offset.
-    this.energy_threshold_ratio_pos = 2 // Signal must be twice the offset
+    this.energy_threshold_ratio_pos = 2 * 4 // Signal must be twice the offset
     this.energy_threshold_ratio_neg = 0.5 // Signal must be half the offset
     this.energy_integration = 1 // Size of integration change compared to the signal per second.
     this.filter = [
@@ -191,8 +191,6 @@ export class VAD {
         this.voiceTrend++
       }
     }
-
-    console.log(this.voiceTrend)
 
     let start = false
     let end = false
