@@ -9,7 +9,7 @@ const recorderStateText = ref<string>("")
 const messageList = ref<Message[]>([]);
 const chatMode = ref<"echo" | "chat">("echo")
 
-const recorder = VoiceRecorder('http://localhost:9002/transcribe')
+const recorder = VoiceRecorder({ endpoint: 'http://localhost:9002/transcribe' })
 const chatClinet = ChatClinet('http://localhost:9002/api/chat')
 
 async function onClick() {
