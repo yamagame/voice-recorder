@@ -5,9 +5,8 @@ import threading
 from pathlib import Path
 # from server_whisper import whisperTranscribe
 from server_reazon import reazonTranscribe
-from server_chat import chat
 
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI,File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -21,11 +20,9 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'])
 
-
 @app.post("/transcribe")
-async def transcribe(audio: UploadFile = File(...)):  # recieve data
-    outputfile = os.path.join(os.environ.get(
-        'WAVE_FILE_DIR', "./work"), Path(audio.filename).stem + ".wav")
+async def transcribe(audio: UploadFile = File(...)): #recieve data
+    outputfile = os.path.join(os.environ.get('WAVE_FILE_DIR', "./work"), Path(audio.filename).stem + ".wav")
 
     # wavファイルを書き出し
     upload_dir = open(outputfile, "wb+")
@@ -44,15 +41,12 @@ async def transcribe(audio: UploadFile = File(...)):  # recieve data
     lock.release()
     return {"filename": audio.filename, "text": text}
 
-
-class TranscribeRequest(BaseModel):
+class Transcribe(BaseModel):
     filename: str
 
-
 @app.post("/wav/transcribe")
-async def transcribeFromAPI(audio: TranscribeRequest):  # recieve data
-    outputfile = os.path.join(os.environ.get(
-        'WAVE_FILE_DIR', "./work"), Path(audio.filename).stem + ".wav")
+async def transcribeFromAPI(audio: Transcribe): #recieve data
+    outputfile = os.path.join(os.environ.get('WAVE_FILE_DIR', "./work"), Path(audio.filename).stem + ".wav")
 
     # wavファイルを書き出し
     # upload_dir = open(outputfile, "wb+")
@@ -70,13 +64,3 @@ async def transcribeFromAPI(audio: TranscribeRequest):  # recieve data
 
     lock.release()
     return {"filename": audio.filename, "text": text}
-
-
-class MessageRequest(BaseModel):
-    text: str
-    mode: str
-
-
-@app.post("/api/chat")
-async def chatResponse(message: MessageRequest):  # recieve data
-    return {"text": message.text, "content": chat(message.text, message.mode)}

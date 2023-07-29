@@ -6,14 +6,11 @@ type RecorderState = 'idle' | 'recording' | 'speaking' | 'delay' | 'transcribe'
 let recorder: Recoreder
 
 // 音声処理初期設定関数（下記getUserMediaのコールバックとして、マイクとの接続開始時に実行）
-export function VoiceRecorder(endpoint?: string) {
+export function VoiceRecorder() {
   if (recorder) {
     return recorder
   }
   recorder = new Recoreder()
-  if (endpoint) {
-    recorder.setEndpoint(endpoint)
-  }
   return recorder
 }
 
@@ -263,10 +260,6 @@ class Recoreder extends EventEmitter {
 
   isRecording() {
     return this._recording
-  }
-
-  isSpeaking() {
-    return this._speaking
   }
 
   speech(text: string) {
