@@ -1,16 +1,20 @@
+type ChatInput = {
+  endpoint: string
+}
+
 export class ChatResponse {
   text: string = ''
   content: string = ''
 }
 
-export function ChatClinet(endpoint: string) {
-  return new Chat(endpoint)
+export function ChatClinet(props: ChatInput) {
+  return new Chat(props)
 }
 
 export class Chat {
   url: string = ''
-  constructor(api: string) {
-    this.url = api
+  constructor(props: ChatInput) {
+    this.url = props.endpoint
   }
 
   request(text: string, mode: 'echo' | 'chat'): Promise<ChatResponse> {

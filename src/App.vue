@@ -10,7 +10,7 @@ const messageList = ref<Message[]>([]);
 const chatMode = ref<"echo" | "chat">("echo")
 
 const recorder = VoiceRecorder({ endpoint: 'http://localhost:9002/transcribe' })
-const chatClinet = ChatClinet('http://localhost:9002/api/chat')
+const chatClinet = ChatClinet({ endpoint: 'http://localhost:9002/api/chat' })
 
 async function onClick() {
   if (startButton.value === "start") {
