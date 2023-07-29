@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Message } from "../model/message"
-import { getFormattedDate } from "../audio/date"
+import { Message } from "~/model/message"
+import { getFormattedDate } from "~/audio/date"
 defineProps<{
   messageList: Message[]
 }>()

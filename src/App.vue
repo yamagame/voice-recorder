@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
-import { VoiceRecorder } from "./audio/voice/recorder"
+import { VoiceRecorder } from "~/audio/voice/recorder"
 import { ref, onMounted } from 'vue'
-import { Message } from "./model/message"
+import { Message } from "~/model/message"
 const startButton = ref<string>("start")
 const recorderStateText = ref<string>("")
 const messageList = ref<Message[]>([]);
