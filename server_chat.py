@@ -21,7 +21,9 @@ def chatGPT(input_prompt):
         max_tokens=100
     )
 
-    return res['choices'][0]['message']['content']
+    content = res['choices'][0]['message']['content']
+    print(content)
+    return content
 
 
 def dummmyGPT(input_prompt):
