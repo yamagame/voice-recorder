@@ -20,7 +20,10 @@ defineProps<{
           <tbody v-for="message of messageList" :key="message.id">
             <tr>
               <td>{{ getFormattedDate(message.date, "yyyy/MM/dd hh:mm:ss") }}</td>
-              <td>{{ message.text }}</td>
+              <td v-if="message.actor === 'you'" class="message-you">
+                {{ message.text }}
+              </td>
+              <td v-else class="message-bot">{{ message.text }}</td>
             </tr>
           </tbody>
         </table>

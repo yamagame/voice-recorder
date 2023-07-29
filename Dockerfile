@@ -14,6 +14,8 @@ RUN huggingface-cli login --token ${HUGGINGFACE_TOKEN}
 RUN pip install datasets
 RUN pip install uvicorn fastapi python-multipart
 RUN pip install pyworld==0.3.2
+RUN pip install openai
+RUN pip install python-dotenv
 
 #RUN apt install -y nodejs npm
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
