@@ -184,10 +184,11 @@ div.mark-top-header button:active {
 
 td.message-you {
   color: black;
+  padding-left: 10px;
 }
-
 
 td.message-bot {
   color: blue;
   text-align :right;
+  padding-right: 10px;
 }
