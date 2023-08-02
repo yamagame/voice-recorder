@@ -89,9 +89,10 @@ onMounted(async () => {
 <template>
   <div class="mark-top-header" @click.stop>
     <div class="mark-container" @click.stop>
+      Mode:
       <select v-model="chatMode">
-        <option value="echo">echo mode</option>
-        <option value="chat">chat mode</option>
+        <option value="echo">Echo</option>
+        <option value="chat">Chat</option>
       </select>
       <button @click="onClick">{{ startButton }}</button>
       {{ recorderStateText }}
