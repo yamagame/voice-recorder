@@ -3,6 +3,8 @@
 Vue3(Vite/Typescript)で作成したReazonSpeechを使用した音声認識アプリです。
 startボタンを押下すると音声認識開始します。
 
+左上の Mode を Echoにすると、オウム返し、Chat にすると、ChatGPTと会話できます。
+
 ![demo.png](./img/demo.png)
 
 ## システム構成/シーケンス図
@@ -13,13 +15,29 @@ Webアプリはフレームワークに[Vue3/Vite](https://ja.vuejs.org/)を使�
 
 ```mermaid
 sequenceDiagram
+    autonumber
     participant front as VoiceRecorder<br/>Webアプリ<br/>(Vue3/Vite)
     participant server as 音声認識<br/>サーバー<br/>(server.py)
+    participant chat as ChatGPT
+    Note over front,server: echo mode
     front ->> server: WAV形式の音声データ
     server ->> front: 音声認識結果
+    loop
+        front-->server: 1 と 2 を繰り返す
+    end
+    Note over front,chat: chat mode
+    front ->> server: WAV形式の音声データ
+    server ->> chat: 認識テキスト
+    chat ->> server: 回答テキスト
+    server ->> front: 回答テキスト
+    loop
+        front-->chat: 4 から 7 を繰り返す
+    end
 ```
 
 ## ステート図
+
+音声認識の処理はサーバー側で処理されるます。音声認識処理中も録音は停止しませんが、発話中は停止されます。
 
 ![ステート図](./img/recoding-state.drawio.svg)
 
@@ -50,6 +68,24 @@ $ npm install
 または
 $ yarn install
 ```
+
+## ChatGPT の環境変数
+
+Chatモードを機能させるには以下の環境変数に値を設定します。
+
+- OPENAI_ORGANIZATION_ID
+- OPENAI_API_KEY
+
+プロジェクトのルートに .env.local ファイルを作成して環境変数を記入すると自動的に読み込んで設定されます。
+
+```env
+OPENAI_ORGANIZATION_ID=XXXXXXXXXXXXXXXXXXXX
+OPENAI_API_KEY=XXXXXXXXXXXXXXXXX
+```
+
+環境変数の設定がない場合は語尾に「ですね」をつけて返します。
+
+会話データは ./work/history.csv ファイルに記録されます。また ./work/history.csv 対話データのキャッシュとして利用され、過去に同様の対話があった場合は ChatGPT へのリクエストは行いません。
 
 ## 実行方法
 
@@ -227,4 +263,18 @@ npm run test:e2e -- --debug
 
 ```sh
 npm run lint
+```
+
+## openai whisper で音声認識する
+
+以下のスクリプトを実行して音声認識サーバーを起動します。初回起動時、mediumサイズのデータセット(1.4G)をダウンロードします。
+
+```sh
+# サンプルデータの音声認識
+$ ./trans_whisper.py ./testdata/sample.wav
+```
+
+```sh
+# 音声認識サーバーを whisper で起動
+$ ./scripts/start-server-whisper.sh
 ```

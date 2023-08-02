@@ -30,6 +30,10 @@ pre {
   /* display: flex; */
 }
 
+.mark-container select {
+  margin-right: 8px;
+}
+
 .mark-cell {
   /* flex: 1; */
   display: inline-block;
@@ -176,4 +180,15 @@ div.mark-top-header button:active {
 
 :active.copycontainer {
   color: hotpink;
+}
+
+td.message-you {
+  color: black;
+  padding-left: 10px;
+}
+
+td.message-bot {
+  color: blue;
+  text-align :right;
+  padding-right: 10px;
 }
